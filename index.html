@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreelanceAnalyzer — Market Pricing Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+ 
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        Freelance<span class="accent">Analyzer</span>
+      </div>
+      <div class="topbar-right">
+        <span id="countLabel" class="count-label">Loading…</span>
+        <button id="themeToggle" class="theme-btn" aria-label="Toggle theme" title="Toggle theme">☽</button>
+      </div>
+    </div>
+  </header>
+ 
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-dots" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="eyebrow">Real-time market data</p>
+      <h1 class="hero-title">Market Pricing<br/><em>Intelligence</em></h1>
+      <p class="hero-sub">Analyse live freelance job listings and price yourself with confidence.</p>
+    </div>
+  </section>
+ 
+  <main class="container">
+ 
+    <!-- ERROR BANNER -->
+    <div id="errorBanner" class="error-banner" style="display:none"></div>
+ 
+    <!-- STATS -->
+    <div id="results" class="stats"></div>
+ 
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search" placeholder="Search roles, companies…" autocomplete="off" />
+      </div>
+      <div class="controls-right">
+        <select id="category"><option value="">All categories</option></select>
+        <select id="sort">
+          <option value="newest">Newest first</option>
+          <option value="high">Salary ↓</option>
+          <option value="low">Salary ↑</option>
+          <option value="alpha">A → Z</option>
+        </select>
+        <div class="price-wrap">
+          <input type="number" id="minPrice" placeholder="Min ₹" min="0" />
+          <span class="price-sep">–</span>
+          <input type="number" id="maxPrice" placeholder="Max ₹" min="0" />
+        </div>
+        <button id="favBtn" class="ctrl-btn">♡ Favorites</button>
+        <button id="resetBtn" class="ctrl-btn outline">↺ Reset</button>
+      </div>
+    </div>
+ 
+    <!-- JOBS GRID -->
+    <div id="jobs" class="jobs"></div>
+ 
+  </main>
+ 
+  <!-- TOAST -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+ 
+  <script type="module">
+    import { fetchJobs }                                        from "./js/api.js";
+    import { analyzePrices, filterAndSortJobs, getCategories } from "./js/logic.js";
+    import {
+      showLoading, displayJobs, displayStats,
+      populateCategories, updateCount, showToast, showError
+    }                                                           from "./js/ui.js";
+ 
+    // ── State ──────────────────────────────────────────────────────────────
+    let allJobs     = [];
+    let favorites   = new Set(JSON.parse(localStorage.getItem("fa_favs") || "[]"));
+    let showFavOnly = false;
+ 
+    // ── Init ───────────────────────────────────────────────────────────────
+    async function init() {
+      showLoading();
+      allJobs = await fetchJobs();
+      if (!allJobs.length) {
+        showError("Could not fetch job data. Please check your connection and try again.");
+        return;
+      }
+      populateCategories(getCategories(allJobs));
+      updateUI();
+    }
+ 
+    // ── Render ─────────────────────────────────────────────────────────────
+    function updateUI() {
+      const opts = {
+        search:   document.getElementById("search").value,
+        category: document.getElementById("category").value,
+        sort:     document.getElementById("sort").value,
+        minPrice: Number(document.getElementById("minPrice").value) || 0,
+        maxPrice: Number(document.getElementById("maxPrice").value) || Infinity,
+      };
+      let filtered = filterAndSortJobs(allJobs, opts);
+      if (showFavOnly) filtered = filtered.filter(j => favorites.has(j.id));
+ 
+      displayJobs(filtered, favorites, toggleFav);
+      displayStats(analyzePrices(filtered));
+      updateCount(filtered.length, allJobs.length);
+    }
+ 
+    // ── Favorites ──────────────────────────────────────────────────────────
+    function toggleFav(id) {
+      favorites.has(id) ? favorites.delete(id) : favorites.add(id);
+      localStorage.setItem("fa_favs", JSON.stringify([...favorites]));
+      showToast(favorites.has(id) ? "Added to favorites ♥" : "Removed from favorites");
+      updateUI();
+    }
+ 
+    // ── Reset ──────────────────────────────────────────────────────────────
+    function resetFilters() {
+      ["search","minPrice","maxPrice"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("category").value = "";
+      document.getElementById("sort").value = "newest";
+      showFavOnly = false;
+      document.getElementById("favBtn").classList.remove("active");
+      updateUI();
+    }
+    window.resetFilters = resetFilters;
+ 
+    // ── Debounce ───────────────────────────────────────────────────────────
+    function debounce(fn, ms = 300) {
+      let t;
+      return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+    }
+ 
+    // ── Events ─────────────────────────────────────────────────────────────
+    document.getElementById("search").addEventListener("input", debounce(updateUI));
+    ["category","sort","minPrice","maxPrice"].forEach(id =>
+      document.getElementById(id).addEventListener("input", updateUI)
+    );
+    document.getElementById("favBtn").addEventListener("click", () => {
+      showFavOnly = !showFavOnly;
+      document.getElementById("favBtn").classList.toggle("active", showFavOnly);
+      updateUI();
+    });
+    document.getElementById("resetBtn").addEventListener("click", resetFilters);
+ 
+    // ── Theme ──────────────────────────────────────────────────────────────
+    const themeBtn = document.getElementById("themeToggle");
+    const saved    = localStorage.getItem("fa_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", saved);
+    themeBtn.textContent = saved === "dark" ? "☀" : "☽";
+ 
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("fa_theme", next);
+      themeBtn.textContent = next === "dark" ? "☀" : "☽";
+    });
+ 
+    init();
+  </script>
+</body>
+</html>
+ 
