@@ -3,54 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Analyse live freelance job listings and price yourself with confidence." />
+  <meta name="theme-color" content="#22d3ee" />
   <title>FreelanceAnalyzer — Market Pricing Intelligence</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
- 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="logo">
-        <span class="logo-mark">◈</span>
-        Freelance<span class="accent">Analyzer</span>
-      </div>
-      <div class="topbar-right">
-        <span id="countLabel" class="count-label">Loading…</span>
-        <button id="themeToggle" class="theme-btn" aria-label="Toggle theme" title="Toggle theme">☽</button>
-      </div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">
+      <span class="logo-mark">◈</span>Freelance<span class="accent">Analyzer</span>
     </div>
-  </header>
+    
+    <nav class="topnav" role="navigation">
+      <button class="nav-tab active" data-tab="home">🏠 Home</button>
+      <button class="nav-tab" data-tab="saved">♥ Saved Jobs</button>
+      <button class="nav-tab" data-tab="calculator">🧮 My Rate</button>
+      <button class="nav-tab" data-tab="insights">📊 Insights</button>
+    </nav>
  
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-dots" aria-hidden="true"></div>
-    <div class="hero-inner">
-      <p class="eyebrow">Real-time market data</p>
-      <h1 class="hero-title">Market Pricing<br/><em>Intelligence</em></h1>
-      <p class="hero-sub">Analyse live freelance job listings and price yourself with confidence.</p>
+    <div class="topbar-right">
+      <span id="onlineStatus" class="status-dot online">● Online</span>
+      <span id="countLabel" class="count-label">Loading…</span>
+      <button id="themeToggle" class="theme-btn" aria-label="Toggle theme" title="Toggle dark/light mode">☽</button>
     </div>
-  </section>
- 
-  <main class="container">
- 
-    <!-- ERROR BANNER -->
-    <div id="errorBanner" class="error-banner" style="display:none"></div>
- 
-    <!-- STATS -->
+  </div>
+</header>
+
+<div id="installBanner" class="install-banner" style="display:none">
+  <span class="install-text">📲 Install FreelanceAnalyzer for offline access</span>
+  <div class="install-actions">
+    <button id="installBtn" class="install-btn">Install App</button>
+    <button id="dismissInstall" class="install-dismiss">✕</button>
+  </div>
+</div>
+
+<section class="hero" id="heroSection">
+  <div class="hero-dots" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <p class="eyebrow">Real-time market data</p>
+    <h1 class="hero-title">Market Pricing<br/><em>Intelligence</em></h1>
+    <p class="hero-sub">Analyse live freelance job listings and price yourself with confidence.</p>
+    <button class="hero-collapse-btn" id="heroCollapse" title="Collapse hero">▲ Collapse</button>
+  </div>
+</section>
+
+<main class="container">
+
+  <div id="errorBanner" class="error-banner" style="display:none"></div>
+
+  <div id="tab-home" class="tab-panel active">
+
     <div id="results" class="stats"></div>
- 
-    <!-- CONTROLS -->
-    <div class="controls-bar">
+
+    <div class="controls-bar" id="filterBar">
       <div class="search-wrap">
         <span class="search-icon">⌕</span>
         <input type="text" id="search" placeholder="Search roles, companies…" autocomplete="off" />
+        <span id="searchSpinner" class="search-spinner" style="display:none"></span>
       </div>
       <div class="controls-right">
         <select id="category"><option value="">All categories</option></select>
+        <select id="jobType"><option value="">All types</option></select>
         <select id="sort">
           <option value="newest">Newest first</option>
           <option value="high">Salary ↓</option>
@@ -62,113 +82,213 @@
           <span class="price-sep">–</span>
           <input type="number" id="maxPrice" placeholder="Max ₹" min="0" />
         </div>
-        <button id="favBtn" class="ctrl-btn">♡ Favorites</button>
+        <button id="favBtn" class="ctrl-btn">♡ Saved</button>
+        <button id="scrollModeBtn" class="ctrl-btn">∞ Infinite</button>
         <button id="resetBtn" class="ctrl-btn outline">↺ Reset</button>
       </div>
     </div>
- 
-    <!-- JOBS GRID -->
+
+    <div class="result-meta">
+      <span id="resultCount" class="result-count"></span>
+      <div class="perf-pills">
+        <span class="perf-pill">⏱ Debounced search</span>
+        <span class="perf-pill">🔄 Throttled scroll</span>
+        <span class="perf-pill">💾 API cached</span>
+        <span id="modePill" class="perf-pill active-pill">📄 Pagination</span>
+      </div>
+    </div>
+
     <div id="jobs" class="jobs"></div>
- 
-  </main>
- 
-  <!-- TOAST -->
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
- 
-  <script type="module">
-    import { fetchJobs }                                        from "./js/api.js";
-    import { analyzePrices, filterAndSortJobs, getCategories } from "./js/logic.js";
-    import {
-      showLoading, displayJobs, displayStats,
-      populateCategories, updateCount, showToast, showError
-    }                                                           from "./js/ui.js";
- 
-    // ── State ──────────────────────────────────────────────────────────────
-    let allJobs     = [];
-    let favorites   = new Set(JSON.parse(localStorage.getItem("fa_favs") || "[]"));
-    let showFavOnly = false;
- 
-    // ── Init ───────────────────────────────────────────────────────────────
-    async function init() {
-      showLoading();
-      allJobs = await fetchJobs();
-      if (!allJobs.length) {
-        showError("Could not fetch job data. Please check your connection and try again.");
-        return;
-      }
-      populateCategories(getCategories(allJobs));
-      updateUI();
-    }
- 
-    // ── Render ─────────────────────────────────────────────────────────────
-    function updateUI() {
-      const opts = {
-        search:   document.getElementById("search").value,
-        category: document.getElementById("category").value,
-        sort:     document.getElementById("sort").value,
-        minPrice: Number(document.getElementById("minPrice").value) || 0,
-        maxPrice: Number(document.getElementById("maxPrice").value) || Infinity,
-      };
-      let filtered = filterAndSortJobs(allJobs, opts);
-      if (showFavOnly) filtered = filtered.filter(j => favorites.has(j.id));
- 
-      displayJobs(filtered, favorites, toggleFav);
-      displayStats(analyzePrices(filtered));
-      updateCount(filtered.length, allJobs.length);
-    }
- 
-    // ── Favorites ──────────────────────────────────────────────────────────
-    function toggleFav(id) {
-      favorites.has(id) ? favorites.delete(id) : favorites.add(id);
-      localStorage.setItem("fa_favs", JSON.stringify([...favorites]));
-      showToast(favorites.has(id) ? "Added to favorites ♥" : "Removed from favorites");
-      updateUI();
-    }
- 
-    // ── Reset ──────────────────────────────────────────────────────────────
-    function resetFilters() {
-      ["search","minPrice","maxPrice"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("category").value = "";
-      document.getElementById("sort").value = "newest";
-      showFavOnly = false;
-      document.getElementById("favBtn").classList.remove("active");
-      updateUI();
-    }
-    window.resetFilters = resetFilters;
- 
-    // ── Debounce ───────────────────────────────────────────────────────────
-    function debounce(fn, ms = 300) {
-      let t;
-      return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
-    }
- 
-    // ── Events ─────────────────────────────────────────────────────────────
-    document.getElementById("search").addEventListener("input", debounce(updateUI));
-    ["category","sort","minPrice","maxPrice"].forEach(id =>
-      document.getElementById(id).addEventListener("input", updateUI)
-    );
-    document.getElementById("favBtn").addEventListener("click", () => {
-      showFavOnly = !showFavOnly;
-      document.getElementById("favBtn").classList.toggle("active", showFavOnly);
-      updateUI();
+
+    <div id="loadMoreSpinner" class="load-more-spinner" style="display:none">
+      <div class="spinner"><div></div><div></div><div></div><div></div></div>
+      <span>Loading more…</span>
+    </div>
+
+    <div id="pagination" class="pagination"></div>
+
+    <section id="top-jobs" class="top-jobs-grid">
+      <div class="top-section">
+        <h3 class="top-section-title">🏆 Top 5 Highest Paying</h3>
+        <div id="topHighJobs" class="top-cards"></div>
+      </div>
+      <div class="top-section">
+        <h3 class="top-section-title">💡 Top 5 Entry Level</h3>
+        <div id="topLowJobs" class="top-cards"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="tab-saved" class="tab-panel">
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="section-title">♥ Saved Jobs <span id="savedCount" class="saved-badge">0</span></h2>
+        <p class="section-sub">Persisted in localStorage — survives page reloads</p>
+      </div>
+      <div id="savedJobsList"></div>
+    </div>
+  </div>
+
+  <div id="tab-calculator" class="tab-panel">
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="section-title">🧮 Personalized Pricing Calculator</h2>
+        <p class="section-sub">Select your skill area and experience to get a tailored rate — updates instantly, no page reload</p>
+      </div>
+      <div class="calc-form">
+        <div class="calc-field">
+          <label for="calcCategory">Skill Category</label>
+          <select id="calcCategory"><option value="">Select category…</option></select>
+        </div>
+        <div class="calc-field">
+          <label for="calcExperience">Experience Level</label>
+          <select id="calcExperience"><option value="">Select level…</option></select>
+        </div>
+        <button type="button" id="calcBtn" class="calc-submit">Calculate ↗</button>
+      </div>
+      <div id="calcResult" class="calc-result">
+        <p class="calc-empty">Select a category and experience level above to see your recommended rate.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-insights" class="tab-panel">
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="section-title">📊 Category-wise Pricing Insights</h2>
+        <p class="section-sub">Average market rates per category, calculated with reduce()</p>
+      </div>
+      <div id="categoryInsights" class="insights-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<div id="jobModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Job details">
+  <div class="modal-box">
+    <button id="modalClose" class="modal-close" aria-label="Close modal">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<button id="scrollTop" class="scroll-top" aria-label="Back to top" style="display:none" title="Back to top">↑</button>
+
+<script type="module">
+  import { fetchJobs } from "./js/api.js";
+  import {
+    analyzePrices, filterAndSortJobs, getCategories,
+    getJobTypes, getCategoryInsights, getTopJobs
+  } from "./js/logic.js";
+  import {
+    showLoading, showLoadingMore, hideLoadingMore,
+    displayJobs, displayStats, displaySavedJobs,
+    displayCategoryInsights, displayTopJobs, displayPagination,
+    appendScrollSentinel, removeScrollSentinel, setScrollMode,
+    populateCategories, populateJobTypes,
+    renderPricingCalculator, updatePricingResult,
+    openJobModal, closeModal,
+    updateCount, showToast, showError,
+    showInstallBanner, updateOnlineStatus
+  } from "./js/ui.js";
+  import { debounce, throttle, createScrollObserver, Paginator, store } from "./js/perf.js";
+
+  let allJobs = [];
+  let filteredJobs = [];
+  let favorites = new Set(store.get("fa_favs", []));
+  let showFavOnly = false;
+  let infiniteMode = store.get("fa_scroll_mode", false);
+  let scrollObs = null;
+  const paginator = new Paginator([], 12);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
     });
-    document.getElementById("resetBtn").addEventListener("click", resetFilters);
- 
-    // ── Theme ──────────────────────────────────────────────────────────────
-    const themeBtn = document.getElementById("themeToggle");
-    const saved    = localStorage.getItem("fa_theme") || "dark";
-    document.documentElement.setAttribute("data-theme", saved);
-    themeBtn.textContent = saved === "dark" ? "☀" : "☽";
- 
-    themeBtn.addEventListener("click", () => {
-      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      localStorage.setItem("fa_theme", next);
-      themeBtn.textContent = next === "dark" ? "☀" : "☽";
-    });
- 
-    init();
-  </script>
+  }
+
+  let deferredInstall = null;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredInstall = e;
+    if (!store.get("fa_install_dismissed")) {
+      showInstallBanner(() => {
+        deferredInstall?.prompt();
+        deferredInstall = null;
+      });
+    }
+  });
+
+  document.getElementById("dismissInstall")?.addEventListener("click", () => {
+    store.set("fa_install_dismissed", true);
+  });
+
+  updateOnlineStatus(navigator.onLine);
+  window.addEventListener("online", () => {
+    updateOnlineStatus(true);
+    showToast("Back online ✓", "success");
+  });
+  window.addEventListener("offline", () => {
+    updateOnlineStatus(false);
+    showToast("Offline — cached data shown", "warn");
+  });
+
+  const themeBtn = document.getElementById("themeToggle");
+  const savedTheme = store.get("fa_theme", "dark");
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  themeBtn.textContent = savedTheme === "dark" ? "☀" : "☽";
+
+  themeBtn.addEventListener("click", () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("fa_theme", next);
+    themeBtn.textContent = next === "dark" ? "☀" : "☽";
+    showToast(`Switched to ${next} mode`);
+  });
+
+  const tabs = document.querySelectorAll(".nav-tab");
+  const panels = document.querySelectorAll(".tab-panel");
+  let activeTab = store.get("fa_active_tab", "home");
+
+  function switchTab(name) {
+    activeTab = name;
+    store.set("fa_active_tab", name);
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+    panels.forEach(p => p.classList.toggle("active", p.id === `tab-${name}`));
+
+    if (name === "saved") displaySavedJobs(allJobs, favorites);
+    if (name === "calculator") updatePricingResult(allJobs);
+    if (name === "insights") displayCategoryInsights(getCategoryInsights(allJobs));
+  }
+
+  tabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+  switchTab(activeTab);
+
+  async function init() {
+    showLoading();
+    setScrollMode(infiniteMode);
+
+    allJobs = await fetchJobs();
+    if (!allJobs.length) {
+      showError("Could not fetch job data.");
+      return;
+    }
+
+    populateCategories(getCategories(allJobs));
+    populateJobTypes(getJobTypes(allJobs));
+    renderPricingCalculator(getCategories(allJobs));
+    updateUI();
+  }
+
+  function updateUI() {
+    filteredJobs = filterAndSortJobs(allJobs, {});
+    displayJobs(filteredJobs, favorites);
+    displayStats(analyzePrices(filteredJobs));
+  }
+
+  init();
+</script>
 </body>
 </html>
- 
