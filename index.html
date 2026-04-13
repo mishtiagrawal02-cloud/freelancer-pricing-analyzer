@@ -14,12 +14,14 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+ 
 
 <header class="topbar">
   <div class="topbar-inner">
     <div class="logo">
       <span class="logo-mark">◈</span>Freelance<span class="accent">Analyzer</span>
     </div>
+ 
     
     <nav class="topnav" role="navigation">
       <button class="nav-tab active" data-tab="home">🏠 Home</button>
@@ -35,6 +37,7 @@
     </div>
   </div>
 </header>
+ 
 
 <div id="installBanner" class="install-banner" style="display:none">
   <span class="install-text">📲 Install FreelanceAnalyzer for offline access</span>
@@ -43,6 +46,7 @@
     <button id="dismissInstall" class="install-dismiss">✕</button>
   </div>
 </div>
+ 
 
 <section class="hero" id="heroSection">
   <div class="hero-dots" aria-hidden="true"></div>
@@ -53,15 +57,18 @@
     <button class="hero-collapse-btn" id="heroCollapse" title="Collapse hero">▲ Collapse</button>
   </div>
 </section>
-
+ 
 <main class="container">
-
+ 
   <div id="errorBanner" class="error-banner" style="display:none"></div>
-
+ 
+  
   <div id="tab-home" class="tab-panel active">
-
+ 
+    
     <div id="results" class="stats"></div>
-
+ 
+    
     <div class="controls-bar" id="filterBar">
       <div class="search-wrap">
         <span class="search-icon">⌕</span>
@@ -82,12 +89,13 @@
           <span class="price-sep">–</span>
           <input type="number" id="maxPrice" placeholder="Max ₹" min="0" />
         </div>
-        <button id="favBtn" class="ctrl-btn">♡ Saved</button>
+        <button id="favBtn"        class="ctrl-btn">♡ Saved</button>
         <button id="scrollModeBtn" class="ctrl-btn">∞ Infinite</button>
-        <button id="resetBtn" class="ctrl-btn outline">↺ Reset</button>
+        <button id="resetBtn"      class="ctrl-btn outline">↺ Reset</button>
       </div>
     </div>
-
+ 
+   
     <div class="result-meta">
       <span id="resultCount" class="result-count"></span>
       <div class="perf-pills">
@@ -97,16 +105,20 @@
         <span id="modePill" class="perf-pill active-pill">📄 Pagination</span>
       </div>
     </div>
-
+ 
+    
     <div id="jobs" class="jobs"></div>
-
+ 
+    
     <div id="loadMoreSpinner" class="load-more-spinner" style="display:none">
       <div class="spinner"><div></div><div></div><div></div><div></div></div>
       <span>Loading more…</span>
     </div>
-
+ 
+    
     <div id="pagination" class="pagination"></div>
-
+ 
+   
     <section id="top-jobs" class="top-jobs-grid">
       <div class="top-section">
         <h3 class="top-section-title">🏆 Top 5 Highest Paying</h3>
@@ -117,9 +129,10 @@
         <div id="topLowJobs" class="top-cards"></div>
       </div>
     </section>
-
+ 
   </div>
-
+ 
+  <!-- ══════════ TAB: SAVED JOBS ══════════ -->
   <div id="tab-saved" class="tab-panel">
     <div class="section-block">
       <div class="section-header">
@@ -129,13 +142,15 @@
       <div id="savedJobsList"></div>
     </div>
   </div>
-
+ 
+  <!-- ══════════ TAB: MY RATE CALCULATOR ══════════ -->
   <div id="tab-calculator" class="tab-panel">
     <div class="section-block">
       <div class="section-header">
         <h2 class="section-title">🧮 Personalized Pricing Calculator</h2>
         <p class="section-sub">Select your skill area and experience to get a tailored rate — updates instantly, no page reload</p>
       </div>
+      <!-- IMPORTANT: no <form> tag, so nothing submits/refreshes -->
       <div class="calc-form">
         <div class="calc-field">
           <label for="calcCategory">Skill Category</label>
@@ -152,7 +167,8 @@
       </div>
     </div>
   </div>
-
+ 
+  <!-- ══════════ TAB: INSIGHTS ══════════ -->
   <div id="tab-insights" class="tab-panel">
     <div class="section-block">
       <div class="section-header">
@@ -162,26 +178,30 @@
       <div id="categoryInsights" class="insights-list"></div>
     </div>
   </div>
-
+ 
 </main>
-
+ 
+<!-- JOB DETAIL MODAL -->
 <div id="jobModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Job details">
   <div class="modal-box">
     <button id="modalClose" class="modal-close" aria-label="Close modal">✕</button>
     <div id="modalBody"></div>
   </div>
 </div>
-
+ 
+<!-- TOAST -->
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
+ 
+<!-- BACK TO TOP -->
 <button id="scrollTop" class="scroll-top" aria-label="Back to top" style="display:none" title="Back to top">↑</button>
-
+ 
+<!-- ══════════ APP SCRIPT ══════════ -->
 <script type="module">
-  import { fetchJobs } from "./js/api.js";
+  import { fetchJobs }                            from "./js/api.js";
   import {
     analyzePrices, filterAndSortJobs, getCategories,
     getJobTypes, getCategoryInsights, getTopJobs
-  } from "./js/logic.js";
+  }                                               from "./js/logic.js";
   import {
     showLoading, showLoadingMore, hideLoadingMore,
     displayJobs, displayStats, displaySavedJobs,
@@ -192,23 +212,26 @@
     openJobModal, closeModal,
     updateCount, showToast, showError,
     showInstallBanner, updateOnlineStatus
-  } from "./js/ui.js";
+  }                                               from "./js/ui.js";
   import { debounce, throttle, createScrollObserver, Paginator, store } from "./js/perf.js";
-
-  let allJobs = [];
+ 
+  // ── State ─────────────────────────────────────────────────────────────────
+  let allJobs      = [];
   let filteredJobs = [];
-  let favorites = new Set(store.get("fa_favs", []));
-  let showFavOnly = false;
+  let favorites    = new Set(store.get("fa_favs", []));
+  let showFavOnly  = false;
   let infiniteMode = store.get("fa_scroll_mode", false);
-  let scrollObs = null;
-  const paginator = new Paginator([], 12);
-
+  let scrollObs    = null;
+  const paginator  = new Paginator([], 12);
+ 
+  // ── PWA: Service Worker ───────────────────────────────────────────────────
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     });
   }
-
+ 
+  // ── PWA: Install prompt ───────────────────────────────────────────────────
   let deferredInstall = null;
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
@@ -220,26 +243,20 @@
       });
     }
   });
-
   document.getElementById("dismissInstall")?.addEventListener("click", () => {
     store.set("fa_install_dismissed", true);
   });
-
+ 
+  // ── Online / offline ──────────────────────────────────────────────────────
   updateOnlineStatus(navigator.onLine);
-  window.addEventListener("online", () => {
-    updateOnlineStatus(true);
-    showToast("Back online ✓", "success");
-  });
-  window.addEventListener("offline", () => {
-    updateOnlineStatus(false);
-    showToast("Offline — cached data shown", "warn");
-  });
-
-  const themeBtn = document.getElementById("themeToggle");
+  window.addEventListener("online",  () => { updateOnlineStatus(true);  showToast("Back online ✓", "success"); });
+  window.addEventListener("offline", () => { updateOnlineStatus(false); showToast("Offline — cached data shown", "warn"); });
+ 
+  // ── Theme (localStorage) ──────────────────────────────────────────────────
+  const themeBtn   = document.getElementById("themeToggle");
   const savedTheme = store.get("fa_theme", "dark");
   document.documentElement.setAttribute("data-theme", savedTheme);
   themeBtn.textContent = savedTheme === "dark" ? "☀" : "☽";
-
   themeBtn.addEventListener("click", () => {
     const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
@@ -247,48 +264,251 @@
     themeBtn.textContent = next === "dark" ? "☀" : "☽";
     showToast(`Switched to ${next} mode`);
   });
-
-  const tabs = document.querySelectorAll(".nav-tab");
-  const panels = document.querySelectorAll(".tab-panel");
+ 
+  // ── Nav tabs (no scroll, no reload) ──────────────────────────────────────
+  const tabs    = document.querySelectorAll(".nav-tab");
+  const panels  = document.querySelectorAll(".tab-panel");
   let activeTab = store.get("fa_active_tab", "home");
-
+ 
   function switchTab(name) {
     activeTab = name;
     store.set("fa_active_tab", name);
-    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+    tabs.forEach(t   => t.classList.toggle("active", t.dataset.tab === name));
     panels.forEach(p => p.classList.toggle("active", p.id === `tab-${name}`));
-
-    if (name === "saved") displaySavedJobs(allJobs, favorites);
+    // Refresh saved/calculator/insights panels when switching to them
+    if (name === "saved")      displaySavedJobs(allJobs, favorites, toggleFav, openDetail);
     if (name === "calculator") updatePricingResult(allJobs);
-    if (name === "insights") displayCategoryInsights(getCategoryInsights(allJobs));
+    if (name === "insights")   displayCategoryInsights(getCategoryInsights(allJobs));
   }
-
+ 
   tabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
-  switchTab(activeTab);
-
+  switchTab(activeTab); // restore last tab
+ 
+  // ── Hero collapse ─────────────────────────────────────────────────────────
+  const heroEl  = document.getElementById("heroSection");
+  const heroBtn = document.getElementById("heroCollapse");
+  let heroCollapsed = store.get("fa_hero_collapsed", false);
+ 
+  function applyHeroState() {
+    heroEl.classList.toggle("collapsed", heroCollapsed);
+    heroBtn.textContent = heroCollapsed ? "▼ Expand" : "▲ Collapse";
+  }
+  applyHeroState();
+ 
+  heroBtn.addEventListener("click", () => {
+    heroCollapsed = !heroCollapsed;
+    store.set("fa_hero_collapsed", heroCollapsed);
+    applyHeroState();
+  });
+ 
+  // ── Init ──────────────────────────────────────────────────────────────────
   async function init() {
     showLoading();
     setScrollMode(infiniteMode);
-
+    updateModePill();
+ 
     allJobs = await fetchJobs();
     if (!allJobs.length) {
-      showError("Could not fetch job data.");
+      showError("Could not fetch job data. Please check your connection and try again.");
       return;
     }
-
-    populateCategories(getCategories(allJobs));
-    populateJobTypes(getJobTypes(allJobs));
-    renderPricingCalculator(getCategories(allJobs));
+ 
+    const categories = getCategories(allJobs);
+    const jobTypes   = getJobTypes(allJobs);
+    populateCategories(categories);
+    populateJobTypes(jobTypes);
+    renderPricingCalculator(categories);
+    restoreSavedFilters();
     updateUI();
   }
-
-  function updateUI() {
-    filteredJobs = filterAndSortJobs(allJobs, {});
-    displayJobs(filteredJobs, favorites);
+ 
+  // ── Core render ───────────────────────────────────────────────────────────
+  function updateUI(resetPage = true) {
+    const opts = readFilters();
+    filteredJobs = filterAndSortJobs(allJobs, opts);
+    if (showFavOnly) filteredJobs = filteredJobs.filter(j => favorites.has(j.id));
+ 
+    paginator.setItems(filteredJobs);
+    if (resetPage) paginator.reset();
+ 
+    renderCurrentView();
+ 
     displayStats(analyzePrices(filteredJobs));
+    updateCount(filteredJobs.length, allJobs.length);
+    updateResultCount(filteredJobs.length);
+ 
+    // Always re-render these from full dataset
+    displayTopJobs(getTopJobs(allJobs,5,"high"), getTopJobs(allJobs,5,"low"), favorites, toggleFav, openDetail);
+ 
+    // Refresh whichever tab is visible
+    if (activeTab === "saved")    displaySavedJobs(allJobs, favorites, toggleFav, openDetail);
+    if (activeTab === "insights") displayCategoryInsights(getCategoryInsights(allJobs));
+ 
+    saveFilters();
   }
-
+ 
+  function renderCurrentView() {
+    if (infiniteMode) {
+      const items = paginator.getAccumulated();
+      displayJobs(items, favorites, toggleFav, openDetail, false);
+      paginator.hasMore ? attachInfiniteScroll() : removeScrollSentinel();
+    } else {
+      const items = paginator.getPage(paginator.page);
+      displayJobs(items, favorites, toggleFav, openDetail, false);
+      displayPagination(paginator, n => {
+        paginator.goTo(n);
+        renderCurrentView();
+        document.getElementById("filterBar")?.scrollIntoView({ behavior:"smooth", block:"start" });
+      });
+    }
+  }
+ 
+  function updateResultCount(n) {
+    const el = document.getElementById("resultCount");
+    if (el) el.textContent = `${n} listing${n !== 1 ? "s" : ""} found`;
+  }
+ 
+  // ── Infinite scroll ───────────────────────────────────────────────────────
+  function attachInfiniteScroll() {
+    const sentinel = appendScrollSentinel();
+    if (scrollObs) scrollObs.disconnect();
+    const loadMore = throttle(() => {
+      if (!paginator.hasMore) return;
+      showLoadingMore();
+      setTimeout(() => {
+        paginator.next();
+        const items = paginator.getPage(paginator.page);
+        displayJobs(items, favorites, toggleFav, openDetail, true);
+        hideLoadingMore();
+        paginator.hasMore ? attachInfiniteScroll() : removeScrollSentinel();
+      }, 300);
+    }, 600);
+    scrollObs = createScrollObserver(sentinel, loadMore);
+  }
+ 
+  // ── Favorites (throttled — prevents double-click) ─────────────────────────
+  const toggleFav = throttle((id) => {
+    if (favorites.has(id)) { favorites.delete(id); showToast("Removed from saved jobs"); }
+    else                   { favorites.add(id);    showToast("Saved to favourites ♥", "success"); }
+    store.set("fa_favs", [...favorites]);
+    updateUI(false);
+  }, 400);
+ 
+  // ── Detail modal ──────────────────────────────────────────────────────────
+  function openDetail(id) {
+    const job = allJobs.find(j => j.id === id);
+    if (job) openJobModal(job, favorites.has(id), jid => toggleFav(jid));
+  }
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("jobModal").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+ 
+  // ── Scroll mode toggle ────────────────────────────────────────────────────
+  document.getElementById("scrollModeBtn").addEventListener("click", () => {
+    infiniteMode = !infiniteMode;
+    store.set("fa_scroll_mode", infiniteMode);
+    setScrollMode(infiniteMode);
+    updateModePill();
+    if (scrollObs) { scrollObs.disconnect(); scrollObs = null; }
+    updateUI();
+    showToast(infiniteMode ? "∞ Infinite scroll on" : "📄 Pagination on");
+  });
+ 
+  function updateModePill() {
+    const p = document.getElementById("modePill");
+    if (p) p.textContent = infiniteMode ? "∞ Infinite Scroll" : "📄 Pagination";
+  }
+ 
+  // ── Scroll-to-top (throttled) ─────────────────────────────────────────────
+  const scrollTopBtn = document.getElementById("scrollTop");
+  window.addEventListener("scroll", throttle(() => {
+    scrollTopBtn.style.display = window.scrollY > 400 ? "flex" : "none";
+  }, 200));
+  scrollTopBtn.addEventListener("click", () => window.scrollTo({ top:0, behavior:"smooth" }));
+ 
+  // ── Filter persistence ────────────────────────────────────────────────────
+  function readFilters() {
+    return {
+      search:   document.getElementById("search").value,
+      category: document.getElementById("category").value,
+      jobType:  document.getElementById("jobType").value,
+      sort:     document.getElementById("sort").value,
+      minPrice: Number(document.getElementById("minPrice").value) || 0,
+      maxPrice: Number(document.getElementById("maxPrice").value) || Infinity,
+    };
+  }
+  function saveFilters() {
+    store.set("fa_filters", {
+      search:   document.getElementById("search").value,
+      category: document.getElementById("category").value,
+      jobType:  document.getElementById("jobType").value,
+      sort:     document.getElementById("sort").value,
+      minPrice: document.getElementById("minPrice").value,
+      maxPrice: document.getElementById("maxPrice").value,
+    });
+  }
+  function restoreSavedFilters() {
+    const f = store.get("fa_filters", null);
+    if (!f) return;
+    if (f.search)   document.getElementById("search").value   = f.search;
+    if (f.minPrice) document.getElementById("minPrice").value = f.minPrice;
+    if (f.maxPrice) document.getElementById("maxPrice").value = f.maxPrice;
+    setTimeout(() => {
+      if (f.category) document.getElementById("category").value = f.category;
+      if (f.jobType)  document.getElementById("jobType").value  = f.jobType;
+      if (f.sort)     document.getElementById("sort").value     = f.sort;
+    }, 0);
+  }
+ 
+  // ── Reset ─────────────────────────────────────────────────────────────────
+  function resetFilters() {
+    ["search","minPrice","maxPrice"].forEach(id => document.getElementById(id).value = "");
+    ["category","jobType","sort"].forEach(id => document.getElementById(id).selectedIndex = 0);
+    showFavOnly = false;
+    document.getElementById("favBtn").classList.remove("active");
+    store.remove("fa_filters");
+    updateUI();
+    showToast("Filters cleared");
+  }
+  window.resetFilters = resetFilters;
+ 
+  // ── Events ────────────────────────────────────────────────────────────────
+ 
+  // Debounced search with spinner
+  const searchEl      = document.getElementById("search");
+  const searchSpinner = document.getElementById("searchSpinner");
+  searchEl.addEventListener("input", () => { searchSpinner.style.display = "block"; });
+  searchEl.addEventListener("input", debounce(() => {
+    searchSpinner.style.display = "none";
+    updateUI();
+  }, 350));
+ 
+  ["category","jobType","sort","minPrice","maxPrice"].forEach(id =>
+    document.getElementById(id).addEventListener("input", updateUI)
+  );
+ 
+  document.getElementById("favBtn").addEventListener("click", () => {
+    showFavOnly = !showFavOnly;
+    document.getElementById("favBtn").classList.toggle("active", showFavOnly);
+    updateUI();
+  });
+  document.getElementById("resetBtn").addEventListener("click", resetFilters);
+ 
+  // Calculator — type="button" prevents any form submit; pure DOM updates
+  // FIXED: no page refresh — events call updatePricingResult which only writes to #calcResult
+  document.getElementById("calcBtn").addEventListener("click", (e) => {
+    e.preventDefault(); // belt-and-suspenders guard
+    updatePricingResult(allJobs);
+  });
+  document.getElementById("calcCategory").addEventListener("change", () => updatePricingResult(allJobs));
+  document.getElementById("calcExperience").addEventListener("change", () => updatePricingResult(allJobs));
+ 
+  // ── Go ────────────────────────────────────────────────────────────────────
   init();
 </script>
 </body>
 </html>
+
+
