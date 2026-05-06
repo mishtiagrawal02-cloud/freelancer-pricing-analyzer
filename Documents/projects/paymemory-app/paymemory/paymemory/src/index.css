@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: #0f172a;
+  color: white;
+}
+
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Header */
+.header p {
+  color: #94a3b8;
+}
+
+/* Search */
+.search {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: #1e293b;
+  border: none;
+  color: white;
+}
+
+/* Summary */
+.summary {
+  display: flex;
+  justify-content: space-between;
+  background: #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+
+/* Card */
+.card {
+  background: #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.amount {
+  color: #38bdf8;
+}
+
+.middle {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.tag {
+  background: #38bdf8;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: black;
+}
+
+/* Status */
+.status.paid {
+  color: #22c55e;
+}
+
+.status.pending {
+  color: #facc15;
+}
